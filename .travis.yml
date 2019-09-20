@@ -1,0 +1,22 @@
+sude: required
+services:
+    - docker
+
+before_install:
+    - docker build -t apjd/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true apjd/react-test npm test -- --coverage
+
+after_success:
+    - docker build -t apjd/multi-client ./client
+    - docker build -t apjd/multi-nginx ./nginx
+    - docker build -t apjd/multi-server ./server
+    - docker build -t apjd/multi-worker ./work
+    # Login in to the docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    - docker push apjd/multi-client
+    - docker push apjd/multi-nginx
+    - docker push apjd/multi-server
+    - docker push apjd/multi-worker
+
